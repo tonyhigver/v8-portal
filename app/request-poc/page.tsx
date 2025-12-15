@@ -10,12 +10,13 @@ export default function RequestPocPage() {
     setLoading(true);
 
     const form = e.currentTarget;
-    const data = {
-      company: form.company.value,
-      email: form.email.value,
-      role: form.role.value,
-      pocType: form.pocType.value,
-    };
+
+    const company = (form.elements.namedItem("company") as HTMLInputElement).value;
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+    const role = (form.elements.namedItem("role") as HTMLInputElement).value;
+    const pocType = (form.elements.namedItem("pocType") as HTMLSelectElement).value;
+
+    const data = { company, email, role, pocType };
 
     await fetch("/api/poc/request", {
       method: "POST",
