@@ -18,15 +18,29 @@ export default function RequestPocPage() {
 
     const data = { company, email, role, pocType };
 
-    await fetch("/api/poc/request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/poc/request`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
-    setLoading(false);
-    alert("POC request submitted. We will contact you.");
-    form.reset();
+      if (!res.ok) {
+        throw new Error("Failed to submit POC");
+      }
+
+      alert("POC request submitted. We will contact you.");
+      form.reset();
+    } catch (err) {
+      alert("Error submitting POC. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -97,7 +111,7 @@ export default function RequestPocPage() {
         {/* Submit */}
         <button
           disabled={loading}
-          className="w-full bg-white text-black py-2 rounded font-medium"
+          className="w-full bg-white text-black py-2 rounded font-medium disabled:opacity-50"
         >
           {loading ? "Submitting..." : "Request POC"}
         </button>
