@@ -63,11 +63,13 @@ export default function PocStatusPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-neutral-950 px-4 text-white">
       <div className="max-w-xl w-full text-center space-y-6">
-        <h1 className="text-3xl font-semibold">POC approved 🎉</h1>
+        <h1 className="text-3xl font-semibold">
+          POC approved 🎉
+        </h1>
 
-        {/* 🔴 DISCLAIMER */}
+        {/* 🔴 GLOBAL DISCLAIMER (PARA TODOS) */}
         <div className="border border-red-500 text-red-400 text-sm rounded-lg p-3">
-          ⚠️ Once you schedule the call, you will be redirected back to this page automatically.
+          ⚠️ After scheduling the call, return to the previous tab.
         </div>
 
         {/* ----------------------------
@@ -113,8 +115,17 @@ export default function PocStatusPage() {
             </p>
 
             <a
-              href="/portal/customer-model"
+              href={process.env.NEXT_PUBLIC_CALENDAR_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-block px-8 py-4 bg-white text-black rounded-lg text-lg font-medium"
+            >
+              Schedule validation call →
+            </a>
+
+            <a
+              href="/portal/customer-model"
+              className="block text-sm text-neutral-400 underline"
             >
               Continue →
             </a>
