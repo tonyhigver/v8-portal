@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RequestPocPage() {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -16,27 +18,23 @@ export default function RequestPocPage() {
     const role = (form.elements.namedItem("role") as HTMLInputElement).value;
     const pocType = (form.elements.namedItem("pocType") as HTMLSelectElement).value;
 
-    const data = { company, email, role, pocType };
-
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE}/poc/request`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ company, email, role, pocType }),
         }
       );
 
-      if (!res.ok) {
-        throw new Error("Failed to submit POC");
-      }
+      if (!res.ok) throw new Error();
 
-      alert("POC request submitted. We will contact you.");
-      form.reset();
-    } catch (err) {
+      const json = await res.json();
+      localStorage.setItem("poc_id", json.id.toString());
+
+      router.push("/poc-status");
+    } catch {
       alert("Error submitting POC. Please try again.");
     } finally {
       setLoading(false);
@@ -53,62 +51,15 @@ export default function RequestPocPage() {
           Request POC
         </h1>
 
-        {/* Company */}
-        <div>
-          <label className="block text-sm text-neutral-300 mb-1">
-            Company name
-          </label>
-          <input
-            name="company"
-            required
-            className="w-full rounded bg-neutral-800 border border-neutral-700 px-3 py-2 text-white"
-          />
-        </div>
+        <input name="company" required placeholder="Company name" className="input" />
+        <input name="email" type="email" required placeholder="Corporate email" className="input" />
+        <input name="role" placeholder="CTO, ML Lead, Founder…" className="input" />
 
-        {/* Email */}
-        <div>
-          <label className="block text-sm text-neutral-300 mb-1">
-            Corporate email
-          </label>
-          <input
-            type="email"
-            name="email"
-            required
-            className="w-full rounded bg-neutral-800 border border-neutral-700 px-3 py-2 text-white"
-          />
-        </div>
+        <select name="pocType" className="input">
+          <option value="open_source">Open-source model</option>
+          <option value="customer_model">Our own model</option>
+        </select>
 
-        {/* Role */}
-        <div>
-          <label className="block text-sm text-neutral-300 mb-1">
-            Role
-          </label>
-          <input
-            name="role"
-            placeholder="CTO, ML Lead, Founder…"
-            className="w-full rounded bg-neutral-800 border border-neutral-700 px-3 py-2 text-white"
-          />
-        </div>
-
-        {/* POC type */}
-        <div>
-          <label className="block text-sm text-neutral-300 mb-1">
-            POC type
-          </label>
-          <select
-            name="pocType"
-            className="w-full rounded bg-neutral-800 border border-neutral-700 px-3 py-2 text-white"
-          >
-            <option value="open_source">
-              Open-source model (recommended)
-            </option>
-            <option value="customer_model">
-              Our own model
-            </option>
-          </select>
-        </div>
-
-        {/* Submit */}
         <button
           disabled={loading}
           className="w-full bg-white text-black py-2 rounded font-medium disabled:opacity-50"
