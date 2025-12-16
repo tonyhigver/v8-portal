@@ -8,6 +8,7 @@ export default function PocStatusPage() {
 
   useEffect(() => {
     const id = localStorage.getItem("poc_id");
+
     if (!id) {
       setLoading(false);
       return;
@@ -22,6 +23,9 @@ export default function PocStatusPage() {
       .catch(() => setLoading(false));
   }, []);
 
+  /* ----------------------------
+     LOADING
+  ----------------------------- */
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-neutral-950 text-white">
@@ -30,6 +34,9 @@ export default function PocStatusPage() {
     );
   }
 
+  /* ----------------------------
+     NOT APPROVED YET
+  ----------------------------- */
   if (!status || status !== "approved") {
     return (
       <main className="min-h-screen flex items-center justify-center bg-neutral-950 px-4 text-white">
@@ -38,31 +45,45 @@ export default function PocStatusPage() {
             POC request received
           </h1>
           <p className="text-neutral-400">
-            Your request is under review.  
-            This page will automatically unlock once approved.
+            Your request is under review.
+            <br />
+            This page will unlock automatically once approved.
           </p>
         </div>
       </main>
     );
   }
 
+  /* ----------------------------
+     APPROVED → CTA ENTERPRISE
+  ----------------------------- */
   return (
-    <main className="min-h-screen flex items-center justify-center bg-neutral-950 px-4">
-      <div className="w-full max-w-6xl bg-white rounded-xl overflow-hidden shadow-xl">
-        <div className="px-6 py-4 border-b">
-          <h1 className="text-2xl font-semibold text-black">
-            Schedule your POC call
-          </h1>
-          <p className="text-sm text-neutral-600 mt-1">
-            Choose a time that works for you. Availability updates in real time.
-          </p>
-        </div>
+    <main className="min-h-screen flex items-center justify-center bg-neutral-950 px-4 text-white">
+      <div className="max-w-xl w-full text-center space-y-6">
+        <h1 className="text-3xl font-semibold">
+          Your POC is approved 🎉
+        </h1>
 
-        <iframe
-          src={process.env.NEXT_PUBLIC_CALENDAR_LINK}
-          className="w-full h-[900px] border-0"
-          allow="camera; microphone; fullscreen"
-        />
+        <p className="text-neutral-400">
+          Please schedule a short validation call with our team.
+          <br />
+          Availability updates in real time.
+        </p>
+
+        <a
+          href={process.env.NEXT_PUBLIC_CALENDAR_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-4 px-8 py-4 bg-white text-black rounded-lg text-lg font-medium hover:bg-neutral-200 transition"
+        >
+          Open calendar & schedule call →
+        </a>
+
+        <p className="text-xs text-neutral-500">
+          The call will be booked directly in Google Calendar.
+          <br />
+          You’ll receive a confirmation automatically.
+        </p>
       </div>
     </main>
   );
