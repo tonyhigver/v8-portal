@@ -70,14 +70,32 @@ export default function PocStatusPage() {
           Availability updates in real time.
         </p>
 
+        {/* PRIMARY CTA */}
         <a
           href={process.env.NEXT_PUBLIC_CALENDAR_LINK}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => {
+            // Marca el inicio del POC (10d + 30min)
+            localStorage.setItem(
+              "poc_started_at",
+              Date.now().toString()
+            );
+          }}
           className="inline-block mt-4 px-8 py-4 bg-white text-black rounded-lg text-lg font-medium hover:bg-neutral-200 transition"
         >
           Open calendar & schedule call →
         </a>
+
+        {/* SECONDARY PATH */}
+        <div>
+          <a
+            href="/portal/poc-active"
+            className="text-sm text-neutral-400 underline"
+          >
+            I’ve already scheduled my call
+          </a>
+        </div>
 
         <p className="text-xs text-neutral-500">
           The call will be booked directly in Google Calendar.
