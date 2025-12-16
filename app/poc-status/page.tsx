@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 
+type PocType = "open_source" | "customer_model";
+
 export default function PocStatusPage() {
   const [status, setStatus] = useState<string | null>(null);
+  const [pocType, setPocType] = useState<PocType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,9 +18,13 @@ export default function PocStatusPage() {
     }
 
     fetch(`${process.env.NEXT_PUBLIC_API_BASE}/poc/${id}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch POC");
+        return res.json();
+      })
       .then((data) => {
         setStatus(data.status);
+        setPocType(data.poc_type); // 👈 viene del backend
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -35,18 +42,14 @@ export default function PocStatusPage() {
   }
 
   /* ----------------------------
-     NOT APPROVED YET
+     NOT APPROVED
   ----------------------------- */
   if (!status || status !== "approved") {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-neutral-950 px-4 text-white">
-        <div className="max-w-xl text-center space-y-4">
-          <h1 className="text-3xl font-semibold">
-            POC request received
-          </h1>
+      <main className="min-h-screen flex items-center justify-center bg-neutral-950 text-white">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-semibold">POC under review</h1>
           <p className="text-neutral-400">
-            Your request is under review.
-            <br />
             This page will unlock automatically once approved.
           </p>
         </div>
@@ -55,53 +58,68 @@ export default function PocStatusPage() {
   }
 
   /* ----------------------------
-     APPROVED → CTA ENTERPRISE
+     APPROVED
   ----------------------------- */
   return (
     <main className="min-h-screen flex items-center justify-center bg-neutral-950 px-4 text-white">
       <div className="max-w-xl w-full text-center space-y-6">
-        <h1 className="text-3xl font-semibold">
-          Your POC is approved 🎉
-        </h1>
+        <h1 className="text-3xl font-semibold">POC approved 🎉</h1>
 
-        <p className="text-neutral-400">
-          Please schedule a short validation call with our team.
-          <br />
-          Availability updates in real time.
-        </p>
-
-        {/* PRIMARY CTA */}
-        <a
-          href={process.env.NEXT_PUBLIC_CALENDAR_LINK}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => {
-            // Marca el inicio del POC (10d + 30min)
-            localStorage.setItem(
-              "poc_started_at",
-              Date.now().toString()
-            );
-          }}
-          className="inline-block mt-4 px-8 py-4 bg-white text-black rounded-lg text-lg font-medium hover:bg-neutral-200 transition"
-        >
-          Open calendar & schedule call →
-        </a>
-
-        {/* SECONDARY PATH */}
-        <div>
-          <a
-            href="/portal/poc-active"
-            className="text-sm text-neutral-400 underline"
-          >
-            I’ve already scheduled my call
-          </a>
+        {/* 🔴 DISCLAIMER */}
+        <div className="border border-red-500 text-red-400 text-sm rounded-lg p-3">
+          ⚠️ Once you schedule the call, you will be redirected back to this page automatically.
         </div>
 
-        <p className="text-xs text-neutral-500">
-          The call will be booked directly in Google Calendar.
-          <br />
-          You’ll receive a confirmation automatically.
-        </p>
+        {/* ----------------------------
+            OPEN SOURCE MODEL
+        ----------------------------- */}
+        {pocType === "open_source" && (
+          <>
+            <p className="text-neutral-400">
+              Please schedule a short validation call with our team.
+            </p>
+
+            <a
+              href={process.env.NEXT_PUBLIC_CALENDAR_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                localStorage.setItem(
+                  "poc_started_at",
+                  Date.now().toString()
+                );
+              }}
+              className="inline-block px-8 py-4 bg-white text-black rounded-lg text-lg font-medium"
+            >
+              Open calendar & schedule call →
+            </a>
+
+            <a
+              href="/portal/poc-active"
+              className="block text-sm text-neutral-400 underline"
+            >
+              I’ve already scheduled my call
+            </a>
+          </>
+        )}
+
+        {/* ----------------------------
+            CUSTOMER MODEL
+        ----------------------------- */}
+        {pocType === "customer_model" && (
+          <>
+            <p className="text-neutral-400">
+              Your custom model POC requires internal provisioning.
+            </p>
+
+            <a
+              href="/portal/customer-model"
+              className="inline-block px-8 py-4 bg-white text-black rounded-lg text-lg font-medium"
+            >
+              Continue →
+            </a>
+          </>
+        )}
       </div>
     </main>
   );
