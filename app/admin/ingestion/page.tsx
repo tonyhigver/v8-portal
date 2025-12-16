@@ -2,34 +2,23 @@
 
 import { useState } from "react";
 
-type Method =
-  | "credentials"
-  | "pgp"
-  | "portal"
-  | "iam";
-
-export default function IngestionPage() {
-  const [method, setMethod] = useState<Method>("credentials");
+export default function AdminIngestionPage() {
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [method, setMethod] = useState("email");
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
 
-    const form = e.target as HTMLFormElement;
+    const form = e.currentTarget;
 
     const payload = {
       method,
-      endpoint: (form.endpoint as any)?.value,
-      access_key: (form.access_key as any)?.value,
-      secret_key: (form.secret_key as any)?.value,
-      bucket: (form.bucket as any)?.value,
-      object: (form.object as any)?.value,
-      expires_in_hours: Number(
-        (form.expires as any)?.value || 48
-      ),
+      endpoint: (form.endpoint as HTMLInputElement).value,
+      access_key: (form.access_key as HTMLInputElement).value,
+      secret_key: (form.secret_key as HTMLInputElement).value,
+      bucket: (form.bucket as HTMLInputElement).value,
+      object: (form.object as HTMLInputElement).value,
     };
 
     try {
@@ -39,121 +28,97 @@ export default function IngestionPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Admin-Token":
-              process.env.NEXT_PUBLIC_ADMIN_TOKEN!,
+            "X-Admin-Token": localStorage.getItem("admin_token") || "",
           },
           body: JSON.stringify(payload),
         }
       );
 
-      if (!res.ok) {
-        throw new Error("Failed");
-      }
+      if (!res.ok) throw new Error("Ingestion failed");
 
-      const data = await res.json();
-      setMessage(`Ingestion started (job ${data.job_id})`);
-    } catch {
-      setMessage("Error starting ingestion");
+      alert("Ingestion job started");
+      form.reset();
+    } catch (err) {
+      alert("Error starting ingestion");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white p-8">
-      <h1 className="text-3xl font-semibold mb-6">
-        Secure Model Ingestion
-      </h1>
+    <main className="min-h-screen bg-neutral-950 text-white px-6 py-10">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <h1 className="text-3xl font-semibold">
+          Secure Model Ingestion
+        </h1>
 
-      <form
-        onSubmit={submit}
-        className="max-w-xl space-y-4"
-      >
+        <p className="text-neutral-400">
+          Use this form to ingest a model provided via
+          email, encrypted email, secure portal or IAM access.
+        </p>
+
         {/* METHOD */}
         <div>
-          <label className="block text-sm mb-1">
-            Ingestion method
-          </label>
+          <label className="block text-sm mb-1">Access method</label>
           <select
             value={method}
-            onChange={(e) =>
-              setMethod(e.target.value as Method)
-            }
-            className="w-full bg-neutral-900 border border-neutral-700 p-2 rounded"
+            onChange={(e) => setMethod(e.target.value)}
+            className="w-full bg-neutral-900 border border-neutral-700 px-3 py-2 rounded"
           >
-            <option value="credentials">
-              Email / Manual credentials
-            </option>
-            <option value="pgp">
-              Encrypted email (PGP)
-            </option>
-            <option value="portal">
-              Secure portal
-            </option>
-            <option value="iam">
-              Cloud IAM (AssumeRole)
-            </option>
+            <option value="email">Email (plain)</option>
+            <option value="encrypted_email">Encrypted email</option>
+            <option value="portal">Secure portal</option>
+            <option value="iam">IAM / Role based</option>
           </select>
         </div>
 
-        {/* COMMON FIELDS */}
-        <input
-          name="endpoint"
-          placeholder="Endpoint (https://storage.customer.com)"
-          className="w-full p-2 bg-neutral-900 border border-neutral-700 rounded"
-          required
-        />
-        <input
-          name="bucket"
-          placeholder="Bucket"
-          className="w-full p-2 bg-neutral-900 border border-neutral-700 rounded"
-          required
-        />
-        <input
-          name="object"
-          placeholder="Object (model-3b.bin)"
-          className="w-full p-2 bg-neutral-900 border border-neutral-700 rounded"
-          required
-        />
+        <form onSubmit={submit} className="space-y-4">
+          <input
+            name="endpoint"
+            placeholder="Endpoint (https://storage.customer.com)"
+            required
+            className="w-full bg-neutral-900 border border-neutral-700 px-3 py-2 rounded"
+          />
 
-        {/* CREDENTIALS */}
-        {method !== "iam" && (
-          <>
-            <input
-              name="access_key"
-              placeholder="Access key"
-              className="w-full p-2 bg-neutral-900 border border-neutral-700 rounded"
-            />
-            <input
-              name="secret_key"
-              placeholder="Secret key"
-              className="w-full p-2 bg-neutral-900 border border-neutral-700 rounded"
-            />
-          </>
-        )}
+          <input
+            name="access_key"
+            placeholder="Access key (if applicable)"
+            className="w-full bg-neutral-900 border border-neutral-700 px-3 py-2 rounded"
+          />
 
-        <input
-          name="expires"
-          placeholder="Expires in hours (default 48)"
-          type="number"
-          className="w-full p-2 bg-neutral-900 border border-neutral-700 rounded"
-        />
+          <input
+            name="secret_key"
+            placeholder="Secret key (if applicable)"
+            className="w-full bg-neutral-900 border border-neutral-700 px-3 py-2 rounded"
+          />
 
-        <button
-          disabled={loading}
-          className="w-full py-3 bg-white text-black rounded font-medium"
-        >
-          {loading
-            ? "Starting ingestion…"
-            : "Start secure pull"}
-        </button>
+          <input
+            name="bucket"
+            placeholder="Bucket name"
+            required
+            className="w-full bg-neutral-900 border border-neutral-700 px-3 py-2 rounded"
+          />
 
-        {message && (
-          <p className="text-sm text-neutral-400">
-            {message}
-          </p>
-        )}
-      </form>
+          <input
+            name="object"
+            placeholder="Object (model-3b.bin)"
+            required
+            className="w-full bg-neutral-900 border border-neutral-700 px-3 py-2 rounded"
+          />
+
+          <button
+            disabled={loading}
+            className="w-full bg-white text-black py-3 rounded font-medium disabled:opacity-50"
+          >
+            {loading ? "Starting ingestion…" : "Start ingestion"}
+          </button>
+        </form>
+
+        <p className="text-xs text-neutral-500">
+          No model data is uploaded via this UI.
+          Access is read-only, time-limited and auditable.
+        </p>
+      </div>
     </main>
   );
 }
