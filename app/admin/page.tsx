@@ -16,31 +16,73 @@ type Poc = {
 export default function AdminPage() {
   const [pocs, setPocs] = useState<Poc[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const headers = {
-    "X-Admin-Token": process.env.NEXT_PUBLIC_ADMIN_TOKEN!,
-  };
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+  const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
 
   async function load() {
-    setLoading(true);
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE}/admin/poc`,
-      { headers }
-    );
-    const data = await res.json();
-    setPocs(data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (!API_BASE || !ADMIN_TOKEN) {
+        throw new Error("Missing API base or admin token");
+      }
+
+      const res = await fetch(`${API_BASE}/admin/poc`, {
+        headers: {
+          "X-Admin-Token": ADMIN_TOKEN,
+        },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`API error ${res.status}: ${text}`);
+      }
+
+      const data = await res.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error("Unexpected API response (not an array)");
+      }
+
+      setPocs(data);
+    } catch (err: any) {
+      console.error("Admin load failed:", err);
+      setPocs([]);
+      setError(err.message || "Failed to load POCs");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function action(id: number, action: string) {
-    await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE}/admin/poc/${id}/${action}`,
-      {
-        method: "POST",
-        headers,
+    try {
+      if (!API_BASE || !ADMIN_TOKEN) {
+        throw new Error("Missing API base or admin token");
       }
-    );
-    load();
+
+      const res = await fetch(
+        `${API_BASE}/admin/poc/${id}/${action}`,
+        {
+          method: "POST",
+          headers: {
+            "X-Admin-Token": ADMIN_TOKEN,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Action failed ${res.status}: ${text}`);
+      }
+
+      await load();
+    } catch (err) {
+      console.error("Action failed:", err);
+      alert("Action failed. Check console.");
+    }
   }
 
   useEffect(() => {
@@ -49,11 +91,21 @@ export default function AdminPage() {
 
   return (
     <main className="p-8 min-h-screen bg-neutral-950 text-white">
-      <h1 className="text-3xl font-semibold mb-8">POC Requests</h1>
+      <h1 className="text-3xl font-semibold mb-8">
+        POC Requests
+      </h1>
 
-      {loading ? (
+      {loading && (
         <p className="text-neutral-400">Loading…</p>
-      ) : (
+      )}
+
+      {error && (
+        <p className="text-red-500 mb-4">
+          {error}
+        </p>
+      )}
+
+      {!loading && !error && (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
