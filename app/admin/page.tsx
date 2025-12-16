@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Poc = {
   id: number;
@@ -48,9 +49,7 @@ export default function AdminPage() {
 
   return (
     <main className="p-8 min-h-screen bg-neutral-950 text-white">
-      <h1 className="text-3xl font-semibold mb-8">
-        POC Requests
-      </h1>
+      <h1 className="text-3xl font-semibold mb-8">POC Requests</h1>
 
       {loading ? (
         <p className="text-neutral-400">Loading…</p>
@@ -73,7 +72,14 @@ export default function AdminPage() {
                   key={p.id}
                   className="border-b border-neutral-900 hover:bg-neutral-900"
                 >
-                  <td className="py-2">{p.company}</td>
+                  <td className="py-2">
+                    <Link
+                      href={`/admin/poc/${p.id}`}
+                      className="underline"
+                    >
+                      {p.company}
+                    </Link>
+                  </td>
                   <td>{p.email}</td>
                   <td>{p.role || "—"}</td>
                   <td>{p.poc_type}</td>
