@@ -28,15 +28,18 @@ export default function AdminIngestionPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Admin-Token": localStorage.getItem("admin_token") || "",
+            // ✅ CAMBIO CLAVE: token desde ENV, no localStorage
+            "X-Admin-Token": process.env.NEXT_PUBLIC_ADMIN_TOKEN!,
           },
           body: JSON.stringify(payload),
         }
       );
 
-      if (!res.ok) throw new Error("Ingestion failed");
+      if (!res.ok) {
+        throw new Error("Ingestion failed");
+      }
 
-      alert("Ingestion job started");
+      alert("Ingestion job started successfully");
       form.reset();
     } catch (err) {
       alert("Error starting ingestion");
@@ -53,13 +56,15 @@ export default function AdminIngestionPage() {
         </h1>
 
         <p className="text-neutral-400">
-          Use this form to ingest a model provided via
-          email, encrypted email, secure portal or IAM access.
+          Use this form to ingest a model provided via email,
+          encrypted email, secure portal or IAM-based access.
         </p>
 
-        {/* METHOD */}
+        {/* ACCESS METHOD */}
         <div>
-          <label className="block text-sm mb-1">Access method</label>
+          <label className="block text-sm mb-1">
+            Access method
+          </label>
           <select
             value={method}
             onChange={(e) => setMethod(e.target.value)}
